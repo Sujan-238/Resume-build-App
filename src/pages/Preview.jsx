@@ -143,7 +143,7 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
 
       // 3. Configure and Open real Razorpay Checkout Modal
       const options = {
-        key: 'rzp_test_SiqG3pUF05TZPs', // User's Test Key
+        key: 'rzp_live_SiuRcn1z6rrHNW', // User's LIVE Key
         amount: order.amount,
         currency: order.currency,
         name: 'ResumeBuilder Premium',
