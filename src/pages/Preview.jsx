@@ -9,6 +9,9 @@ import ResumeTemplate from '../components/ResumeTemplate';
 export default function Preview({ resumeData, templateId, setTemplateId }) {
   const navigate = useNavigate();
   const printRef = useRef(null);
+
+  // For Global Launch: Update this URL to your deployed backend URL (e.g., https://your-app.onrender.com)
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
   
   // Payment & Share States
   const [hasDownloadedFree, setHasDownloadedFree] = useState(false);
@@ -85,10 +88,11 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     }
   };
 
-  const isTier1Premium = templateId === 'modern' || templateId === 'corporate' || templateId === 'creative';
-  const isTier2Pro = templateId.startsWith('photo_');
-  const isPremiumTemplate = isTier1Premium || isTier2Pro;
-  const currentPrice = isTier2Pro ? 89 : 49;
+  const isTier1Premium = ['modern', 'corporate', 'creative', 'blue_designer_pro', 'it_fresher_impact', 'standard_ats_classic', 'indian_corporate_standard'].includes(templateId);
+  const isTier2Pro = templateId.startsWith('photo_') || templateId.startsWith('intern_') || templateId.startsWith('expert_');
+  const isTier3Premium = templateId.startsWith('expert_creative_') || templateId.startsWith('expert_data_analyst_') || templateId.startsWith('expert_business_mba_') || templateId.startsWith('expert_ats_') || templateId.startsWith('expert_executive_');
+  const isPremiumTemplate = isTier1Premium || isTier2Pro || isTier3Premium;
+  const currentPrice = isTier3Premium ? 149 : (isTier2Pro ? 89 : (isTier1Premium ? 49 : 0));
 
   const handleDownloadClick = async () => {
     if (isDownloading) return;
@@ -116,7 +120,7 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     
     try {
       // 1. Fetch secure Order ID from Node.js Express backend
-      const res = await fetch('http://localhost:5000/api/payment/create-order', {
+      const res = await fetch(`${BACKEND_URL}/api/payment/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: currentPrice })
@@ -152,7 +156,7 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
         order_id: order.id, // Mandatory from backend
         handler: async function (response) {
           // 4. Send signatures back to backend for verification
-          const verifyRes = await fetch('http://localhost:5000/api/payment/verify', {
+          const verifyRes = await fetch(`${BACKEND_URL}/api/payment/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -363,17 +367,57 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
                   <option value="minimal">Minimal (Free)</option>
                   <option value="fresher">Fresher (Free)</option>
                 </optgroup>
-                <optgroup label="Premium (₹49)">
-                  <option value="modern">Modern ✨</option>
-                  <option value="corporate">Corporate ✨</option>
-                  <option value="creative">Creative ✨</option>
+                <optgroup label="Basic Student Templates (₹49)">
+                  <option value="modern">Modern Student - Standard 🎓</option>
+                  <option value="corporate">Corporate Basic - Simple 🏢</option>
+                  <option value="creative">Creative Student - Basic 🎨</option>
+                  <option value="blue_designer_pro">Blue Student - Design 🖌️</option>
+                  <option value="it_fresher_impact">IT Student - Impact 💻</option>
+                  <option value="standard_ats_classic">ATS Basic - Student 📄</option>
+                  <option value="indian_corporate_standard">Indian Corporate Basic 👔</option>
                 </optgroup>
-                <optgroup label="Pro Photo (₹89)">
-                  <option value="photo_dark_classic">Dark Classic 📸 (Screenshot)</option>
-                  <option value="photo_modern_split">Modern Split 📸</option>
-                  <option value="photo_executive">Executive 📸</option>
-                  <option value="photo_minimal">Minimal Square ! 📸</option>
-                  <option value="photo_creative_wave">Creative Wave 📸</option>
+
+                <optgroup label="Professional Job Templates (₹89)">
+                  <option value="photo_dark_classic">Professional Classic 📸</option>
+                  <option value="photo_modern_split">Professional Modern Split 📸</option>
+                  <option value="photo_executive">Professional Executive 📸</option>
+                  <option value="photo_minimal">Professional Minimal 📸</option>
+                  <option value="photo_creative_wave">Professional Creative Wave 📸</option>
+                  <option value="expert_dev_dark_hex">Modern IT Developer 💎</option>
+                  <option value="expert_dev_yellow_ribbon">Modern IT Developer 💎</option>
+                  <option value="expert_marketing_blue_arc">Marketing Pro 💎</option>
+                  <option value="expert_marketing_lavender_creative">Marketing Pro 💎</option>
+                  <option value="expert_marketing_orange_bold">Marketing Pro 💎</option>
+                  <option value="photo_intern_teal_geometric">Career Starter Teal 📸</option>
+                  <option value="photo_intern_navy_border">Elite Starter Navy 📸</option>
+                  <option value="photo_intern_yellow_modern">Career Explorer Gold 📸</option>
+                  <option value="photo_intern_earthy_sidebar">Career Starter Earthy 📸</option>
+                </optgroup>
+                <optgroup label="Premium Career Templates 🔥 (₹149)">
+                  <option value="expert_creative_vibrant_bubbles">Creative Designer Resume Best for: designers 💎</option>
+                  <option value="expert_creative_dark_boxed">Creative Designer Resume Best for: designers 🌑</option>
+                  <option value="expert_creative_modern_timeline">Creative Designer Resume Best for: designers 📊</option>
+                  <option value="expert_creative_minimal_impact">Creative Designer Resume Best for: designers 🏁</option>
+                  <option value="expert_creative_futuristic_arrows">Creative Designer Resume Best for: designers ⚡</option>
+                  
+                  <option value="expert_data_analyst_yellow_accent">Data Analyst Resume Best for: analytics roles 📊</option>
+                  <option value="expert_data_analyst_blue_sidebar">Data Analyst Resume Best for: analytics roles 📈</option>
+                  <option value="expert_data_analyst_clean_structured">Data Analyst Resume Best for: analytics roles 🔍</option>
+                  <option value="expert_data_analyst_premium_gold">Data Analyst Resume Best for: analytics roles ✨</option>
+
+                  <option value="expert_business_mba_corporate_blue">Business / MBA Resume Best for: management 💼</option>
+                  <option value="expert_business_mba_premium_yellow">Business / MBA Resume Best for: management 🏆</option>
+                  <option value="expert_business_mba_elegant_salmon">Business / MBA Resume Best for: management 🌸</option>
+                  <option value="expert_business_mba_executive_monochrome">Business / MBA Resume Best for: management 🎩</option>
+
+                  <option value="expert_ats_hybrid_clean_design">ATS + Premium Hybrid Best for: all jobs 🎯</option>
+                  <option value="expert_ats_gold_standard_classic">ATS + Premium Hybrid Best for: all jobs 🏆</option>
+                  <option value="expert_ats_insightful_categorized">ATS + Premium Hybrid Best for: all jobs 💡</option>
+
+                  <option value="expert_executive_teal_photo">Executive / Experience Resume Best for: experienced 🕴️</option>
+                  <option value="expert_executive_corporate_split">Executive / Experience Resume Best for: experienced 🏢</option>
+                  <option value="expert_executive_modern_sidebar">Executive / Experience Resume Best for: experienced ✨</option>
+                  <option value="expert_executive_dynamic_arrows">Executive / Experience Resume Best for: experienced 🏹</option>
                 </optgroup>
               </select>
             </div>
@@ -399,13 +443,39 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       </header>
 
       {/* Main Preview Area */}
-      <main className="flex-1 py-12 px-4 flex justify-center overflow-auto">
-        <div className="shadow-2xl bg-white w-[210mm] min-h-[297mm]">
+      <main className="flex-1 py-4 md:py-12 px-2 md:px-4 flex justify-center overflow-auto pb-24 md:pb-12">
+        <div className="shadow-2xl bg-white w-full sm:w-[210mm] min-h-[297mm] transform origin-top scale-[0.95] sm:scale-100 transition-transform">
           <div ref={printRef} className="w-full h-full">
             <ResumeTemplate data={resumeData} templateId={templateId} />
           </div>
         </div>
       </main>
+
+      {/* 📱 Mobile Bottom Action Bar (Floating Dock) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-sm sm:hidden animate-in fade-in slide-in-from-bottom-5 duration-500">
+        <div className="bg-white/80 backdrop-blur-xl border border-white/20 p-2 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center gap-2">
+            <button 
+               onClick={generateShareLink}
+               className="p-4 bg-gray-100 text-gray-700 rounded-2xl active:scale-90 transition-all"
+            >
+               <Share2 className="w-6 h-6" />
+            </button>
+            <button 
+               onClick={handleDownloadClick}
+               disabled={isDownloading}
+               className="flex-1 flex justify-center items-center gap-2 px-6 py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg active:scale-95 disabled:opacity-50"
+            >
+               {isDownloading ? (
+                 <Loader2 className="w-5 h-5 animate-spin" />
+               ) : (
+                 <>
+                   <Download className="w-5 h-5" />
+                   {isPremiumTemplate ? "Get Premium" : "Download"}
+                 </>
+               )}
+            </button>
+        </div>
+      </div>
     </div>
   );
 }

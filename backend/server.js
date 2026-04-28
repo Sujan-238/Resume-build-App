@@ -6,8 +6,20 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 
 const app = express();
-app.use(cors());
+
+// Production CORS: Add your frontend URL here later for better security
+app.use(cors({
+  origin: "*", // Change to "https://your-frontend-domain.com" in production
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
 app.use(express.json());
+
+// Server Health Check (Useful for Global Monitoring)
+app.get('/', (req, res) => {
+  res.status(200).json({ status: "Online", service: "ResumeForge Payment API" });
+});
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,

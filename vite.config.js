@@ -7,4 +7,17 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'pdf-engine': ['jspdf', 'html-to-image'],
+          'ui-icons': ['lucide-react'],
+          'vendor-core': ['react', 'react-dom', 'react-router-dom'],
+          'firebase-bundle': ['firebase/app', 'firebase/auth', 'firebase/database'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+  }
 })

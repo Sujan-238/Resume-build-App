@@ -267,6 +267,17 @@ export default function Builder({ resumeData, setResumeData }) {
         </div>
 
       </main>
+
+      {/* 📱 Mobile Sticky Builder Actions */}
+      <div className="fixed bottom-6 right-6 lg:hidden z-40">
+        <button 
+          onClick={() => navigate('/preview')}
+          className="flex items-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-[0_10px_30px_rgba(79,70,229,0.4)] active:scale-95 transition-all text-sm uppercase tracking-widest border border-indigo-500"
+        >
+          <Eye className="w-5 h-5" />
+          Build PDF
+        </button>
+      </div>
     </div>
   );
 }
