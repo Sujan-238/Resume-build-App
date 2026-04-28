@@ -10,6 +10,9 @@ import ContactUs from './pages/ContactUs'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import Terms from './pages/Terms'
 import RefundPolicy from './pages/RefundPolicy'
+
+import SupportWidget from './components/SupportWidget'
+
 function App() {
   const [resumeData, setResumeData] = useState({
     fullName: '',
@@ -50,6 +53,8 @@ function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/refund" element={<RefundPolicy />} />
       </Routes>
+      
+      <SupportWidget />
     </div>
   )
 }
