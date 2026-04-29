@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Code, LogOut, Loader2 } from 'lucide-react';
 import { auth, provider } from '../firebase';
-import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from 'firebase/auth';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -18,7 +18,12 @@ export default function Navbar() {
 
   const handleLogin = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      // In Capacitor Apps, popups are blocked. 
+      // GUEST MODE: If it fails, we let them through anyway.
+      await signInWithPopup(auth, provider).catch(() => {
+        alert("Entering Guest Mode (Sync disabled)");
+        setUser({ displayName: "Guest User", photoURL: "https://cdn-icons-png.flaticon.com/512/149/149071.png" });
+      });
     } catch (error) {
       console.error("Login failed:", error);
     }

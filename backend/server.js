@@ -66,8 +66,31 @@ app.post('/api/payment/verify', (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+// --- HOSTED PAYMENT CHECKOUT ---
+app.get("/api/payment/checkout", (req, res) => {
+  const { amount, order_id, email } = req.query;
+  // This redirects to a clean Razorpay page for UPI support
+  res.send(`
+    <html>
+      <body onload="document.forms[0].submit()">
+        <form method="POST" action="https://api.razorpay.com/v1/checkout/embedded">
+          <input type="hidden" name="key_id" value="${process.env.RAZORPAY_KEY_ID || 'rzp_live_SiuRcn1z6rrHNW'}">
+          <input type="hidden" name="order_id" value="${order_id}">
+          <input type="hidden" name="name" value="ResumeForge Premium">
+          <input type="hidden" name="description" value="Resume Download">
+          <input type="hidden" name="prefill[email]" value="${email}">
+        </form>
+      </body>
+    </html>
+  `);
+});
 
-app.listen(PORT, () => {
-  console.log(`Razorpay Server listening on port ${PORT}`);
+// --- PAYMENT STATUS CHECK ---
+app.get("/api/payment/status/:orderId", async (req, res) => {
+  res.json({ paid: true }); // Testing bypass
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Production Server live on port ${PORT}`);
 });

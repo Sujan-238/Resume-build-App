@@ -11,7 +11,7 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
   const printRef = useRef(null);
 
   // Production Readiness: Connected to live Render Backend
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://resumeforge-backend-mh45.onrender.com'; 
+  const BACKEND_URL = 'https://resumeforge-backend-mh45.onrender.com'; 
   
   // Detection for Mobile App environment
   const isNativeApp = window.location.protocol === 'capacitor:';
@@ -56,51 +56,37 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     if (isDownloading) return;
     setIsDownloading(true);
     
-    const element = printRef.current;
-    if (!element) {
-      setIsDownloading(false);
-      return;
-    }
-
     try {
-      // Use html-to-image which properly supports modern css functions like oklch() in Tailwind 4
-      const dataUrl = await toPng(element, { 
-        quality: 1.0, 
-        pixelRatio: window.devicePixelRatio > 1 ? 1.5 : 2, 
-        skipFonts: false,
-        cacheBust: true,
-        fontEmbedCSS: true,
-        backgroundColor: '#ffffff',
-        fetchRequestInit: { cache: 'no-cache' } 
-      });
+      setIsDownloading(true);
       
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
+      // NEW: Server-Side PDF (The "Silver Bullet" for Mobile)
+      // This sends the data to your Render backend to generate a perfect PDF
+      const response = await fetch(`${BACKEND_URL}/api/pdf/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeData, templateId })
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      
-      // Mobile-Safe Download: Using Blob for better Android support
-      const blob = pdf.output('blob');
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Resume_${Date.now()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        if (navigator.share) {
+          const file = new File([blob], `Resume_${Date.now()}.pdf`, { type: 'application/pdf' });
+          await navigator.share({ files: [file], title: 'My Resume' });
+        } else {
+          window.open(url, '_blank');
+        }
+      } else {
+        throw new Error("Server PDF failed");
+      }
       
       setIsDownloading(false);
     } catch (err) {
       console.error("PDF Fail:", err);
-      setIsDownloading(false);
-      alert("Download error. If on mobile, try using a different template or ensure browser permissions are granted.");
+      // Fallback to client-side if server fails
+      alert("Opening Instant Download...");
+      await generateAndSavePdf(); 
     }
   };
 
@@ -164,61 +150,27 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       }
 
       // 3. Configure and Open real Razorpay Checkout Modal
-      const options = {
-        key: 'rzp_live_SiuRcn1z6rrHNW', // User's LIVE Key
-        amount: order.amount,
-        currency: order.currency,
-        name: 'ResumeBuilder Premium',
-        description: isTier2Pro ? 'Pro Template Purchase' : 'Premium Template Purchase',
-        image: 'https://cdn-icons-png.flaticon.com/512/8713/8713292.png',
-        order_id: order.id, // Mandatory from backend
-        handler: async function (response) {
-          // 4. Send signatures back to backend for verification
-          const verifyRes = await fetch(`${BACKEND_URL}/api/payment/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            })
-          });
-          
-          if(verifyRes.ok) {
-            setShowPayModal(false);
-            setIsVerifying(false);
-            alert(`Payment verified on backend! Transaction: ${response.razorpay_payment_id}\nYour premium PDF is downloading...`);
-            await generateAndSavePdf();
-          } else {
-            alert('Security Error: Invalid payment signature detected.');
-            setIsVerifying(false);
-          }
-        },
-        prefill: {
-          name: resumeData?.fullName || '',
-          email: resumeData?.email || '',
-          contact: resumeData?.phone || ''
-        },
-        theme: { color: '#0F172A' }, // Matching UI scheme
-        modal: {
-          ondismiss: function() { setIsVerifying(false); }
+      // NEW: Hosted Payment Page (Forces UPI/GPay to work)
+      // Instead of a popup, we open a dedicated secure window for the payment
+      const paymentUrl = `${BACKEND_URL}/api/payment/checkout?amount=${order.amount}&order_id=${order.id}&email=${resumeData.email}`;
+      window.open(paymentUrl, '_blank');
+      
+      // Start a listener to check if payment is completed
+      const checkInterval = setInterval(async () => {
+        const verify = await fetch(`${BACKEND_URL}/api/payment/status/${order.id}`);
+        const status = await verify.json();
+        if (status.paid) {
+          setHasPaid(true);
+          clearInterval(checkInterval);
+          alert("✨ Payment Successful! Premium Unlocked.");
         }
-      };
+      }, 3000);
 
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response){
-        setIsVerifying(false);
-        alert('Payment Failed! Reason: ' + response.error.description);
-      });
-      rzp.open();
+      setIsVerifying(false);
     } catch(err) {
       console.error(err);
       setIsVerifying(false);
-      if (err.message === "SERVER_OFFLINE") {
-        alert("🔒 Secure Payment Server is currently offline. Please try again in 5 minutes.");
-      } else {
-        alert("⚠️ Connection Error: Could not reach the checkout. Please check your internet and try again.");
-      }
+      alert('⚠️ Connection Error: Please check your internet and try again.');
     }
   };
 
@@ -465,9 +417,9 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       </header>
 
       {/* Main Preview Area */}
-      <main className="flex-1 py-2 md:py-12 px-0 md:px-4 flex justify-center overflow-auto pb-28 md:pb-12 bg-gray-100">
-        <div className="shadow-lg bg-white w-full sm:w-[210mm] min-h-screen sm:min-h-[297mm]">
-          <div ref={printRef} className="w-full h-full bg-white resume-mobile-fix">
+      <main className="flex-1 preview-main-area flex justify-center overflow-auto pb-28 md:pb-12 bg-slate-200">
+        <div className="resume-paper-frame bg-white w-full sm:w-[210mm] min-h-[297mm]">
+          <div ref={printRef} className="w-full h-full bg-white">
             <ResumeTemplate data={resumeData} templateId={templateId} />
           </div>
         </div>

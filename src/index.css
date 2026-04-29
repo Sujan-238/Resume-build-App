@@ -43,21 +43,27 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Mobile Professional Scale Fix --- */
+/* --- Mobile Master UI (Total Reset) --- */
 @media (max-width: 640px) {
-  .resume-mobile-fix {
-    width: 100vw !important;
-    min-height: 100vh !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
+  .preview-main-area {
+    padding: 1.5rem 0.5rem !important;
+    background: #f1f5f9 !important; /* Soft slate background */
   }
   
-  /* Force A4 visual density on tiny screens without using scale() */
-  .resume-mobile-fix * {
-    font-size: clamp(8px, 2.5vw, 14px) !important;
-    line-height: 1.2 !important;
+  .resume-paper-frame {
+    width: 100% !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    transform: scale(1) !important;
+  }
+
+  .resume-paper-frame * {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
   }
   
-  .resume-mobile-fix h1 { font-size: 1.5rem !important; }
+  .resume-paper-frame h1 { font-size: 20px !important; margin-bottom: 4px !important; }
+  .resume-paper-frame h2 { font-size: 14px !important; margin-top: 8px !important; }
 }
