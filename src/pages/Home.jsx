@@ -34,7 +34,7 @@ export default function Home() {
         
         {/* Subtitle */}
         <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl text-center leading-relaxed">
-          Create ATS-friendly, professional resumes in minutes. No sign-ups. Built specifically for students to land internships and top-tier roles.
+          Create ATS-friendly, professional resumes in minutes. Sign in with Google to sync your data across all devices. Built specifically for students to land top-tier roles.
         </p>
         
         {/* CTAs */}
@@ -58,7 +58,7 @@ export default function Home() {
         <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
           <div className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-500" /> Free Export</div>
           <div className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-500" /> ATS Optimized</div>
-          <div className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-500" /> No Logins</div>
+          <div className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-500" /> Secure Sync</div>
         </div>
       </main>
 
