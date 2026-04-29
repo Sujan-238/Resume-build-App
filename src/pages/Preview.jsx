@@ -57,37 +57,34 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     setIsDownloading(true);
     
     try {
+      setIsDownloading(true);
       const element = printRef.current;
       if (!element) return;
 
-      // Desktop Engine optimized for Mobile
-      const dataUrl = await toPng(element, { 
-        quality: 0.95, 
-        pixelRatio: 1.5, 
-        cacheBust: true,
-        fontEmbedCSS: true,
-        backgroundColor: '#ffffff'
-      });
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const dataUrl = await toPng(element, { quality: 0.9, pixelRatio: 1.5 });
+      const pdf = new jsPDF();
       pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
       
       const blob = pdf.output('blob');
       const file = new File([blob], `Resume_${Date.now()}.pdf`, { type: 'application/pdf' });
 
-      if (navigator.share && isNativeApp) {
-        await navigator.share({ files: [file], title: 'My Resume' });
+      // THE MOBILE FIX: Use Native Share API
+      // This is the ONLY way to reliably save files in a Capacitor Android App
+      if (navigator.share) {
+        await navigator.share({
+          files: [file],
+          title: 'My Resume',
+          text: 'Check out my resume created with ResumeForge!'
+        });
       } else {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Resume_${Date.now()}.pdf`;
-        link.click();
+        // Fallback for Desktop
+        pdf.save(`Resume_${Date.now()}.pdf`);
       }
+      
       setIsDownloading(false);
     } catch (err) {
       console.error("PDF Fail:", err);
-      alert("Download failed. Please try again or take a screenshot.");
+      alert("Please try again or take a screenshot.");
       setIsDownloading(false);
     }
   };
@@ -121,46 +118,41 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
 
   const handlePaymentConfirm = async () => {
     setIsVerifying(true);
-    
     try {
-      // 1. Fetch secure Order ID from Node.js Express backend
       const res = await fetch(`${BACKEND_URL}/api/payment/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: currentPrice })
-      }).catch(err => {
-        throw new Error("SERVER_OFFLINE");
       });
-      
-      if (!res.ok) throw new Error("Could not create Razorpay Order. Is backend running?");
       const order = await res.json();
 
-      // 2. Load Razorpay Script dynamically
-      const scriptLoaded = await new Promise((resolve) => {
-        if (window.Razorpay) return resolve(true);
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.body.appendChild(script);
-      });
-
-      if (!scriptLoaded) {
-        alert('Failed to load Razorpay Payment Gateway. Please check your internet connection.');
-        setIsVerifying(false);
-        return;
-      }
-
-      // 3. Configure and Open real Razorpay Checkout Modal
-      // SMART HOSTED FIX: This bypasses the "Blocked Website" error
-      // It works by opening the payment on your trusted Render domain
-      const paymentUrl = `${BACKEND_URL}/api/payment/checkout?amount=${order.amount}&order_id=${order.id}&email=${resumeData.email || 'user@example.com'}`;
-      window.location.href = paymentUrl;
-      
+      const options = {
+        key: 'rzp_live_SiuRcn1z6rrHNW',
+        amount: order.amount,
+        currency: order.currency,
+        name: 'ResumeBuilder Premium',
+        order_id: order.id,
+        handler: async function (response) {
+          const verifyRes = await fetch(`${BACKEND_URL}/api/payment/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(response)
+          });
+          if (verifyRes.ok) {
+            setHasPaid(true);
+            await generateAndSavePdf();
+          }
+        },
+        prefill: { email: resumeData.email, contact: resumeData.phone },
+        theme: { color: '#0F172A' }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
       setIsVerifying(false);
     } catch(err) {
       console.error(err);
       setIsVerifying(false);
+      alert('Payment Error. Please ensure your backend is running.');
     }
   };
 
