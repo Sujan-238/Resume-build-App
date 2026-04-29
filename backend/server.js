@@ -58,7 +58,7 @@ app.post('/api/payment/create-link', async (req, res) => {
       customer: {
         name: "Valued Customer",
         email: email || "customer@example.com",
-        contact: phone || "+919999999999"
+        contact: phone && phone.length >= 10 ? phone : "+919876543210"
       },
       notify: { sms: true, email: true },
       reminder_enable: true,
