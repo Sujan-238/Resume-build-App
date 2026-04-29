@@ -10,8 +10,8 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
   const navigate = useNavigate();
   const printRef = useRef(null);
 
-  // Production Readiness: This will automatically use your live domain once you deploy.
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://resumeforge-api.onrender.com'; 
+  // Production Readiness: Connected to live Render Backend
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://resumeforge-backend-mh45.onrender.com'; 
   
   // Detection for Mobile App environment
   const isNativeApp = window.location.protocol === 'capacitor:';
