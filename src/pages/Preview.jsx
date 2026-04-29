@@ -132,13 +132,13 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       });
       
       const data = await res.json();
-      if (data.url) {
+      if (res.ok && data.url) {
         // Open in the system browser to bypass ALL blocks
         window.open(data.url, '_system');
         setIsVerifying(false);
-        alert("Opening Secure Payment... Once paid, come back here to download!");
+        alert("Opening Secure Payment... After paying, come back here to download!");
       } else {
-        throw new Error("Could not generate link");
+        throw new Error(data.error || "Could not generate payment link");
       }
     } catch(err) {
       alert("Payment Error: " + err.message);
