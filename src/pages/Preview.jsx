@@ -10,8 +10,8 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
   const navigate = useNavigate();
   const printRef = useRef(null);
 
-  // For Global Launch: Update this URL to your deployed backend URL (e.g., https://your-app.onrender.com)
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  // Production Readiness: This will automatically use your live domain once you deploy.
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://resumeforge-api.onrender.com'; // Placeholder for your future live URL
   
   // Payment & Share States
   const [hasDownloadedFree, setHasDownloadedFree] = useState(false);
@@ -78,13 +78,23 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
 
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Resume_${Date.now()}.pdf`);
+      
+      // Mobile-Safe Download: Using Blob for better Android support
+      const blob = pdf.output('blob');
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Resume_${Date.now()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
       setIsDownloading(false);
     } catch (err) {
       console.error("PDF Fail:", err);
       setIsDownloading(false);
-      alert("Download failed. Please try a different template or refresh.");
+      alert("Download error. If on mobile, try using a different template or ensure browser permissions are granted.");
     }
   };
 
@@ -124,6 +134,8 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: currentPrice })
+      }).catch(err => {
+        throw new Error("SERVER_OFFLINE");
       });
       
       if (!res.ok) throw new Error("Could not create Razorpay Order. Is backend running?");
@@ -196,7 +208,11 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     } catch(err) {
       console.error(err);
       setIsVerifying(false);
-      alert('Error initiating Razorpay checkout process. Ensure the backend server is running.');
+      if (err.message === "SERVER_OFFLINE") {
+        alert("🔒 Secure Payment Server is currently offline. Please try again in 5 minutes.");
+      } else {
+        alert("⚠️ Connection Error: Could not reach the checkout. Please check your internet and try again.");
+      }
     }
   };
 
@@ -443,9 +459,14 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       </header>
 
       {/* Main Preview Area */}
-      <main className="flex-1 py-4 md:py-12 px-2 md:px-4 flex justify-center overflow-auto pb-24 md:pb-12">
-        <div className="shadow-2xl bg-white w-full sm:w-[210mm] min-h-[297mm] transform origin-top scale-[0.95] sm:scale-100 transition-transform">
-          <div ref={printRef} className="w-full h-full">
+      <main className="flex-1 py-4 md:py-12 px-2 md:px-4 flex justify-center overflow-auto pb-24 md:pb-12 bg-gray-200">
+        <div className="shadow-2xl bg-white w-full sm:w-[210mm] min-h-[297mm] origin-top transition-transform duration-500 ease-in-out"
+             style={{ 
+               transform: window.innerWidth < 640 ? `scale(${(window.innerWidth - 32) / 794})` : 'scale(1)',
+               marginBottom: window.innerWidth < 640 ? `-${(1 - (window.innerWidth - 32) / 794) * 100}%` : '0'
+             }}
+        >
+          <div ref={printRef} className="w-full h-full bg-white">
             <ResumeTemplate data={resumeData} templateId={templateId} />
           </div>
         </div>

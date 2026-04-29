@@ -10,11 +10,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'pdf-engine': ['jspdf', 'html-to-image'],
-          'ui-icons': ['lucide-react'],
-          'vendor-core': ['react', 'react-dom', 'react-router-dom'],
-          'firebase-bundle': ['firebase/app', 'firebase/auth', 'firebase/database'],
+        manualChunks(id) {
+          if (id.includes('jspdf') || id.includes('html-to-image')) return 'pdf-engine';
+          if (id.includes('lucide-react')) return 'ui-icons';
+          if (id.includes('firebase')) return 'firebase-bundle';
+          if (id.includes('node_modules')) return 'vendor';
         }
       }
     },
