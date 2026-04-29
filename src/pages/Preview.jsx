@@ -60,23 +60,28 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       const element = printRef.current;
       if (!element) return;
       
-      const dataUrl = await toPng(element, { quality: 0.9, pixelRatio: 1.5 });
-      const pdf = new jsPDF();
+      const dataUrl = await toPng(element, { quality: 0.95, pixelRatio: 1.5 });
+      const pdf = new jsPDF('p', 'mm', 'a4');
       pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
       
       const blob = pdf.output('blob');
       const file = new File([blob], `Resume_${Date.now()}.pdf`, { type: 'application/pdf' });
       
       if (navigator.share) {
-        await navigator.share({
-          files: [file],
-          title: 'My Resume',
-          text: 'Sharing my resume from ResumeForge'
-        }).catch(() => {
-          pdf.save("My_Resume.pdf");
-        });
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'My Resume',
+            text: 'My Resume from ResumeForge'
+          });
+        } catch (e) {
+           // DOUBLE ACTION FALLBACK: Open in Browser if Share fails
+           const url = window.URL.createObjectURL(blob);
+           window.open(url, '_blank');
+        }
       } else {
-        pdf.save("My_Resume.pdf");
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
       }
       setIsDownloading(false);
     } catch (err) {
