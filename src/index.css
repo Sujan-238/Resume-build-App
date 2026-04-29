@@ -11,6 +11,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   /* Custom Elegant Scrollbar */
@@ -42,10 +45,19 @@
 
 /* --- Mobile Professional Scale Fix --- */
 @media (max-width: 640px) {
-  .resume-container {
-    padding: 1rem !important;
+  .resume-mobile-fix {
+    width: 100vw !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
-  h1 { font-size: 1.5rem !important; }
-  h2 { font-size: 1.1rem !important; }
-  p, span, div { font-size: 0.85rem !important; line-height: 1.4 !important; }
+  
+  /* Force A4 visual density on tiny screens without using scale() */
+  .resume-mobile-fix * {
+    font-size: clamp(8px, 2.5vw, 14px) !important;
+    line-height: 1.2 !important;
+  }
+  
+  .resume-mobile-fix h1 { font-size: 1.5rem !important; }
 }

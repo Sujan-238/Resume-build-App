@@ -65,10 +65,13 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     try {
       // Use html-to-image which properly supports modern css functions like oklch() in Tailwind 4
       const dataUrl = await toPng(element, { 
-        quality: 1.0,
-        pixelRatio: 2, 
+        quality: 1.0, 
+        pixelRatio: window.devicePixelRatio > 1 ? 1.5 : 2, 
+        skipFonts: false,
+        cacheBust: true,
+        fontEmbedCSS: true,
         backgroundColor: '#ffffff',
-        fetchRequestInit: { cache: 'no-cache' } // prevent weird CORS cache issues
+        fetchRequestInit: { cache: 'no-cache' } 
       });
       
       const pdf = new jsPDF({
@@ -462,14 +465,9 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       </header>
 
       {/* Main Preview Area */}
-      <main className="flex-1 py-4 md:py-12 px-2 md:px-4 flex justify-center overflow-auto pb-24 md:pb-12 bg-gray-200">
-        <div className="shadow-2xl bg-white w-full sm:w-[210mm] min-h-[297mm] origin-top transition-transform duration-500 ease-in-out"
-             style={{ 
-               transform: window.innerWidth < 640 ? `scale(${(window.innerWidth - 32) / 794})` : 'scale(1)',
-               marginBottom: window.innerWidth < 640 ? `-${(1 - (window.innerWidth - 32) / 794) * 100}%` : '0'
-             }}
-        >
-          <div ref={printRef} className="w-full h-full bg-white">
+      <main className="flex-1 py-2 md:py-12 px-0 md:px-4 flex justify-center overflow-auto pb-28 md:pb-12 bg-gray-100">
+        <div className="shadow-lg bg-white w-full sm:w-[210mm] min-h-screen sm:min-h-[297mm]">
+          <div ref={printRef} className="w-full h-full bg-white resume-mobile-fix">
             <ResumeTemplate data={resumeData} templateId={templateId} />
           </div>
         </div>

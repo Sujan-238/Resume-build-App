@@ -6,14 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>ResumeForge - Premium Resume Builder</title>
     <style>
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sab: env(safe-area-inset-bottom);
+      }
       body {
         overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-      }
-      .mobile-optimized-wrapper {
-        width: 100%;
-        overflow-x: hidden;
+        padding-top: var(--sat);
       }
     </style>
   </head>
