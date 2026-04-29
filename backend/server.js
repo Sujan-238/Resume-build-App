@@ -55,12 +55,7 @@ app.post('/api/payment/create-link', async (req, res) => {
       currency: "INR",
       accept_partial: false,
       description: "ResumeBuilder Premium",
-      customer: {
-        name: "Valued Customer",
-        email: email || "customer@example.com",
-        contact: phone && phone.length >= 10 ? phone : "+919876543210"
-      },
-      notify: { sms: true, email: true },
+      notify: { sms: false, email: true },
       reminder_enable: true,
       callback_url: `https://resumeforge.onrender.com/payment-success`,
       callback_method: "get"
