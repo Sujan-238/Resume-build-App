@@ -90,6 +90,7 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       alert("Download failed. Please try again or take a screenshot.");
       setIsDownloading(false);
     }
+  };
 
   const isTier1Premium = ['modern', 'corporate', 'creative', 'blue_designer_pro', 'it_fresher_impact', 'standard_ats_classic', 'indian_corporate_standard'].includes(templateId);
   const isTier2Pro = templateId.startsWith('photo_') || templateId.startsWith('intern_') || templateId.startsWith('expert_');
