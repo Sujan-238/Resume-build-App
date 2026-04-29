@@ -45,6 +45,33 @@ app.post('/api/payment/create-order', async (req, res) => {
   }
 });
 
+// --- NEW: PROFESSIONAL PAYMENT LINK ENGINE ---
+// This generates a secure link that works 100% on all mobile phones
+app.post('/api/payment/create-link', async (req, res) => {
+  try {
+    const { amount, email, phone } = req.body;
+    const paymentLink = await razorpay.paymentLink.create({
+      amount: amount * 100,
+      currency: "INR",
+      accept_partial: false,
+      description: "ResumeBuilder Premium",
+      customer: {
+        name: "Valued Customer",
+        email: email || "customer@example.com",
+        contact: phone || "+919999999999"
+      },
+      notify: { sms: true, email: true },
+      reminder_enable: true,
+      callback_url: `https://resumeforge.onrender.com/payment-success`,
+      callback_method: "get"
+    });
+    res.json({ url: paymentLink.short_url, id: paymentLink.id });
+  } catch (error) {
+    console.error("Link Creation Failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/payment/verify', (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;

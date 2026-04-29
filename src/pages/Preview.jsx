@@ -57,34 +57,30 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     setIsDownloading(true);
     
     try {
-      setIsDownloading(true);
       const element = printRef.current;
       if (!element) return;
-
+      
       const dataUrl = await toPng(element, { quality: 0.9, pixelRatio: 1.5 });
       const pdf = new jsPDF();
       pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
       
       const blob = pdf.output('blob');
       const file = new File([blob], `Resume_${Date.now()}.pdf`, { type: 'application/pdf' });
-
-      // THE MOBILE FIX: Use Native Share API
-      // This is the ONLY way to reliably save files in a Capacitor Android App
+      
       if (navigator.share) {
         await navigator.share({
           files: [file],
           title: 'My Resume',
-          text: 'Check out my resume created with ResumeForge!'
+          text: 'Sharing my resume from ResumeForge'
+        }).catch(() => {
+          pdf.save("My_Resume.pdf");
         });
       } else {
-        // Fallback for Desktop
-        pdf.save(`Resume_${Date.now()}.pdf`);
+        pdf.save("My_Resume.pdf");
       }
-      
       setIsDownloading(false);
     } catch (err) {
-      console.error("PDF Fail:", err);
-      alert("Please try again or take a screenshot.");
+      alert("Error: " + err.message);
       setIsDownloading(false);
     }
   };
@@ -119,40 +115,29 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
   const handlePaymentConfirm = async () => {
     setIsVerifying(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/payment/create-order`, {
+      // THE FAMOUS APP FIX: Use a direct secure payment link
+      const res = await fetch(`${BACKEND_URL}/api/payment/create-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: currentPrice })
+        body: JSON.stringify({ 
+          amount: currentPrice,
+          email: resumeData.email,
+          phone: resumeData.phone
+        })
       });
-      const order = await res.json();
-
-      const options = {
-        key: 'rzp_live_SiuRcn1z6rrHNW',
-        amount: order.amount,
-        currency: order.currency,
-        name: 'ResumeBuilder Premium',
-        order_id: order.id,
-        handler: async function (response) {
-          const verifyRes = await fetch(`${BACKEND_URL}/api/payment/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(response)
-          });
-          if (verifyRes.ok) {
-            setHasPaid(true);
-            await generateAndSavePdf();
-          }
-        },
-        prefill: { email: resumeData.email, contact: resumeData.phone },
-        theme: { color: '#0F172A' }
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-      setIsVerifying(false);
+      
+      const data = await res.json();
+      if (data.url) {
+        // Open in the system browser to bypass ALL blocks
+        window.open(data.url, '_system');
+        setIsVerifying(false);
+        alert("Opening Secure Payment... Once paid, come back here to download!");
+      } else {
+        throw new Error("Could not generate link");
+      }
     } catch(err) {
-      console.error(err);
+      alert("Payment Error: " + err.message);
       setIsVerifying(false);
-      alert('Payment Error. Please ensure your backend is running.');
     }
   };
 
