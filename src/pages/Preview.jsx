@@ -57,48 +57,39 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
     setIsDownloading(true);
     
     try {
-      setIsDownloading(true);
-      
-      // NEW: Server-Side PDF (The "Silver Bullet" for Mobile)
-      // This sends the data to your Render backend to generate a perfect PDF
-      const response = await fetch(`${BACKEND_URL}/api/pdf/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeData, templateId })
-      });
+      const element = printRef.current;
+      if (!element) return;
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        
-        if (navigator.share) {
-          const file = new File([blob], `Resume_${Date.now()}.pdf`, { type: 'application/pdf' });
-          await navigator.share({ files: [file], title: 'My Resume' });
-        } else {
-          window.open(url, '_blank');
-        }
-      } else {
-        throw new Error("Server PDF failed");
-      }
+      // Desktop Engine optimized for Mobile
+      const dataUrl = await toPng(element, { 
+        quality: 0.95, 
+        pixelRatio: 1.5, 
+        cacheBust: true,
+        fontEmbedCSS: true,
+        backgroundColor: '#ffffff'
+      });
       
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
+      
+      const blob = pdf.output('blob');
+      const file = new File([blob], `Resume_${Date.now()}.pdf`, { type: 'application/pdf' });
+
+      if (navigator.share && isNativeApp) {
+        await navigator.share({ files: [file], title: 'My Resume' });
+      } else {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Resume_${Date.now()}.pdf`;
+        link.click();
+      }
       setIsDownloading(false);
     } catch (err) {
       console.error("PDF Fail:", err);
-      // STOP THE LOOP: No more recursive calls
-      alert("⚠️ Server busy. Trying one-tap local download...");
-      try {
-        const element = printRef.current;
-        if (!element) return;
-        const dataUrl = await toPng(element, { quality: 0.8, pixelRatio: 1 });
-        const pdf = new jsPDF();
-        pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
-        pdf.save('My_Resume.pdf');
-      } catch (e) {
-        alert("Please take a screenshot of your resume to save it while we fix our servers!");
-      }
+      alert("Download failed. Please try again or take a screenshot.");
       setIsDownloading(false);
     }
-  };
 
   const isTier1Premium = ['modern', 'corporate', 'creative', 'blue_designer_pro', 'it_fresher_impact', 'standard_ats_classic', 'indian_corporate_standard'].includes(templateId);
   const isTier2Pro = templateId.startsWith('photo_') || templateId.startsWith('intern_') || templateId.startsWith('expert_');
@@ -160,15 +151,15 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       }
 
       // 3. Configure and Open real Razorpay Checkout Modal
-      // NEW: Hosted Payment Page (Direct Redirect works better on Android)
-      const paymentUrl = `${BACKEND_URL}/api/payment/checkout?amount=${order.amount}&order_id=${order.id}&email=${resumeData.email}`;
+      // SMART HOSTED FIX: This bypasses the "Blocked Website" error
+      // It works by opening the payment on your trusted Render domain
+      const paymentUrl = `${BACKEND_URL}/api/payment/checkout?amount=${order.amount}&order_id=${order.id}&email=${resumeData.email || 'user@example.com'}`;
       window.location.href = paymentUrl;
-
+      
       setIsVerifying(false);
     } catch(err) {
       console.error(err);
       setIsVerifying(false);
-      alert('⚠️ Connection Error: Please check your internet and try again.');
     }
   };
 
