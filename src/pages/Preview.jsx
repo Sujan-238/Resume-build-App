@@ -84,9 +84,19 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       setIsDownloading(false);
     } catch (err) {
       console.error("PDF Fail:", err);
-      // Fallback to client-side if server fails
-      alert("Opening Instant Download...");
-      await generateAndSavePdf(); 
+      // STOP THE LOOP: No more recursive calls
+      alert("⚠️ Server busy. Trying one-tap local download...");
+      try {
+        const element = printRef.current;
+        if (!element) return;
+        const dataUrl = await toPng(element, { quality: 0.8, pixelRatio: 1 });
+        const pdf = new jsPDF();
+        pdf.addImage(dataUrl, 'PNG', 0, 0, 210, 297);
+        pdf.save('My_Resume.pdf');
+      } catch (e) {
+        alert("Please take a screenshot of your resume to save it while we fix our servers!");
+      }
+      setIsDownloading(false);
     }
   };
 
@@ -150,21 +160,9 @@ export default function Preview({ resumeData, templateId, setTemplateId }) {
       }
 
       // 3. Configure and Open real Razorpay Checkout Modal
-      // NEW: Hosted Payment Page (Forces UPI/GPay to work)
-      // Instead of a popup, we open a dedicated secure window for the payment
+      // NEW: Hosted Payment Page (Direct Redirect works better on Android)
       const paymentUrl = `${BACKEND_URL}/api/payment/checkout?amount=${order.amount}&order_id=${order.id}&email=${resumeData.email}`;
-      window.open(paymentUrl, '_blank');
-      
-      // Start a listener to check if payment is completed
-      const checkInterval = setInterval(async () => {
-        const verify = await fetch(`${BACKEND_URL}/api/payment/status/${order.id}`);
-        const status = await verify.json();
-        if (status.paid) {
-          setHasPaid(true);
-          clearInterval(checkInterval);
-          alert("✨ Payment Successful! Premium Unlocked.");
-        }
-      }, 3000);
+      window.location.href = paymentUrl;
 
       setIsVerifying(false);
     } catch(err) {

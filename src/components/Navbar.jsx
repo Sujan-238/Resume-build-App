@@ -84,13 +84,21 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <button 
-              onClick={handleLogin}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-lg shadow-sm hover:bg-gray-50 transition-all"
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-              Sign In
-            </button>
+            <div className="flex flex-col items-end">
+              <button 
+                onClick={handleLogin}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-lg shadow-sm hover:bg-gray-50 transition-all"
+              >
+                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                Sign In
+              </button>
+              <button 
+                onClick={() => setUser({ displayName: "Guest", photoURL: "https://cdn-icons-png.flaticon.com/512/149/149071.png" })}
+                className="text-[10px] text-gray-400 hover:text-indigo-600 font-medium mr-2"
+              >
+                Guest Mode
+              </button>
+            </div>
           )}
 
         </div>
