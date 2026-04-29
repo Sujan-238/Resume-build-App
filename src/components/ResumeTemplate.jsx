@@ -4069,5 +4069,9 @@ export default function ResumeTemplate({ data, templateId }) {
   };
 
   const SelectedTemplate = templates[templateId] || PhotoDarkClassicTemplate;
-  return <SelectedTemplate data={safeData} />;
+  return (
+    <div className="mobile-resume-wrapper overflow-hidden w-full h-full">
+      <SelectedTemplate data={safeData} />
+    </div>
+  );
 }
