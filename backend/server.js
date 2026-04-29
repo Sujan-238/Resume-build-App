@@ -57,7 +57,7 @@ app.post('/api/payment/create-link', async (req, res) => {
       description: "ResumeBuilder Premium",
       notify: { sms: false, email: true },
       reminder_enable: true,
-      callback_url: `https://resumeforge.onrender.com/payment-success`,
+      callback_url: `https://resume-build-app-swart.vercel.app/preview?payment=success`,
       callback_method: "get"
     });
     res.json({ url: paymentLink.short_url, id: paymentLink.id });
